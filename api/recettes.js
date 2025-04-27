@@ -1,26 +1,30 @@
-// pages/api/recettes.js
+const db = require("../database");
 
-const recettesMock = [
-  {
-    id: 1,
-    titre: "Gâteau à l'ube",
-    description: "Un délicieux gâteau violet moelleux.",
-    ingredients: "ube, farine, sucre, beurre, œufs",
-    etapes: "Préchauffez le four à 180°C.\nMélangez l'ube râpé avec les autres ingrédients.\nVersez dans un moule beurré.\nFaites cuire pendant 40 minutes."
-  },
-  {
-    id: 2,
-    titre: "Tarte à l'ube",
-    description: "Une tarte onctueuse au goût doux et sucré.",
-    ingredients: "ube, pâte sablée, crème liquide, sucre",
-    etapes: "Étalez la pâte dans un moule à tarte.\nPréparez une crème à l'ube.\nVersez sur la pâte.\nCuire 30 minutes à 170°C."
-  }
-];
+module.exports = async (req, res) => {
+  const database = db.initializeDatabase();
 
-export default function handler(req, res) {
   if (req.method === "GET") {
-    res.status(200).json(recettesMock);
-  } else {
+    try {
+      const recettes = await db.getRecettes(database);
+      res.status(200).json(recettes);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+
+  else if (req.method === "POST") {
+    try {
+      const userId = req.body.userId || 1; 
+      const recetteId = await db.addRecette(database, req.body.recette, userId);
+      res.status(201).json({ id: recetteId, message: "Recette ajoutée" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+
+  else {
     res.status(405).json({ message: "Méthode non autorisée" });
   }
-}
+};
